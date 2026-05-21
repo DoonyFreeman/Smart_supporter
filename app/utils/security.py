@@ -1,10 +1,8 @@
 from datetime import UTC, datetime, timedelta
 
-from fastapi import Depends
 from fastapi.security import OAuth2PasswordBearer
-from jose import JWTError, jwt
+from jose import jwt
 from passlib.context import CryptContext
-from typing import Annotated
 
 from app.config import settings
 
@@ -40,18 +38,3 @@ def create_refresh_token(sub: str) -> str:
 
 def decode_token(token: str) -> dict:
     return jwt.decode(token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
-
-
-async def get_current_user(token: Annotated[str, Depends(oauth2_scheme)]) -> str:
-    try:
-        payload = decode_token(token)
-        if payload.get("type") != "access":
-            raise JWTError
-        sub: str | None = payload.get("sub")
-        if sub is None:
-            raise JWTError
-        return sub
-    except JWTError:
-        from app.utils.errors import UnauthorizedException
-
-        raise UnauthorizedException("Could not validate credentials")
