@@ -4,6 +4,7 @@ from app.api.deps import AdminUser, CurrentUser, DB, Pagination
 from app.models import Ticket
 from app.schemas.ticket import TicketCreate, TicketResponse, TicketUpdate
 from app.services import TicketService
+from app.tasks import process_ticket
 from app.utils.errors import ForbiddenException
 
 router = APIRouter(prefix="/tickets", tags=["tickets"])
@@ -32,11 +33,13 @@ async def submit_ticket(
     current_user: CurrentUser,
 ) -> Ticket:
     service = TicketService(db)
-    return await service.submit_ticket(
+    ticket = await service.submit_ticket(
         title=payload.title,
         description=payload.description,
         created_by=current_user.id,
     )
+    process_ticket.delay(ticket.id)
+    return ticket
 
 
 @router.get("/", response_model=list[TicketResponse])
