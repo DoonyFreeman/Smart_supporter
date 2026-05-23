@@ -35,6 +35,12 @@ supports_triager/
 - [x] `app/main.py` — lifespan, exception handlers (6 штук), пустой FastAPI
 - [x] Проверено: ruff ✅, format ✅, mypy ✅, `uvicorn` стартует и отвечает 200 на /docs
 
+#### ✅ Этап 6 — Инфраструктура (завершён)
+- [x] `.env.example` — все переменные окружения
+- [x] Alembic: `alembic init`, async `env.py`, авто-миграция `init`, `upgrade head` (проверен downgrade/re-upgrade)
+- [x] `Dockerfile` — multi-stage (builder + runtime)
+- [x] `docker-compose.yml` — app + celery + postgres:16 + redis:7
+
 #### Этап 2 — Контракты (сначала данные)
 - [ ] Написать SQLAlchemy модели: User, Ticket, FAQArticle, DocumentationArticle, TicketHistory, ErrorLog
 - [ ] Написать Pydantic схемы: auth, user, ticket, faq, common (ErrorResponse, PaginatedResponse)
