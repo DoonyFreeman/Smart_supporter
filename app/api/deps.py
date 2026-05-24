@@ -1,6 +1,7 @@
 from typing import Annotated
 
 from fastapi import Depends, Query
+from fastapi.security import HTTPAuthorizationCredentials
 from jose import JWTError
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -16,8 +17,9 @@ Pagination = Annotated[int, Query(ge=1, le=100)]
 
 async def get_current_user(
     db: DB,
-    token: Annotated[str, Depends(oauth2_scheme)],
+    credentials: Annotated[HTTPAuthorizationCredentials, Depends(oauth2_scheme)],
 ) -> User:
+    token = credentials.credentials
     try:
         payload = decode_token(token)
         if payload.get("type") != "access":

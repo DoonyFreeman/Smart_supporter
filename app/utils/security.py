@@ -1,12 +1,12 @@
 import bcrypt
 from datetime import UTC, datetime, timedelta
 
-from fastapi.security import OAuth2PasswordBearer
+from fastapi.security import HTTPBearer
 from jose import jwt
 
 from app.config import settings
 
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl=f"{settings.API_V1_PREFIX}/auth/token")
+oauth2_scheme = HTTPBearer()
 
 
 def hash_password(password: str) -> str:
