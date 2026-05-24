@@ -11,13 +11,21 @@ from sqlalchemy.ext.asyncio import (
     create_async_engine,
 )
 
-from app.config import settings
+import os
+
+from app.config import settings as _settings
 from app.database import get_db
 from app.main import app
 from app.models import Base, User, UserRole
 from app.utils.security import hash_password
 
-TEST_DATABASE_URL = settings.DATABASE_URL
+# Detect if running inside Docker (postgres hostname resolves) or on host
+_INSIDE_DOCKER = os.path.exists("/.dockerenv") or os.environ.get("DOCKER_CONTAINER") == "true"
+if not _INSIDE_DOCKER:
+    _settings.DATABASE_URL = _settings.DATABASE_URL.replace("@postgres:", "@localhost:")
+_settings.LLM_STUB = True
+_settings.LLM_API_URL = "http://localhost:11434/api/generate"
+_TEST_DB_URL = _settings.DATABASE_URL
 
 
 @pytest.fixture(scope="session")
@@ -30,11 +38,15 @@ def event_loop() -> Generator[asyncio.AbstractEventLoop, None, None]:
 @pytest_asyncio.fixture(scope="session")
 async def engine():
     e = create_async_engine(
-        TEST_DATABASE_URL,
+        _TEST_DB_URL,
         echo=False,
         poolclass=NullPool,
     )
     async with e.begin() as conn:
+        await conn.run_sync(Base.metadata.drop_all)
+        await conn.execute(
+            __import__("sqlalchemy").text("DROP TABLE IF EXISTS alembic_version")
+        )
         await conn.run_sync(Base.metadata.create_all)
     yield e
     async with e.begin() as conn:

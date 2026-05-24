@@ -20,6 +20,7 @@ class Settings(BaseSettings):
     LLM_MODEL: str = "llama3"
     LLM_API_URL: str = "http://localhost:11434/api/generate"
     LLM_API_KEY: str = ""
+    LLM_STUB: bool = False
 
     DEBUG: bool = True
     CORS_ORIGINS: list[str] = ["http://localhost:3000"]

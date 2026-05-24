@@ -3,6 +3,17 @@ networks:
     driver: bridge
 
 services:
+  frontend:
+    build:
+      context: frontend
+    ports:
+      - "3000:80"
+    networks:
+      - app_network
+    depends_on:
+      app:
+        condition: service_started
+
   app:
     networks:
       - app_network
@@ -17,6 +28,8 @@ services:
         condition: service_started
     command: >
       sh -c "alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port 8000"
+    volumes:
+      - ./tests:/app/tests
 
   celery:
     build: .
