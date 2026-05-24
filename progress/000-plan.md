@@ -35,49 +35,43 @@ supports_triager/
 - [x] `app/main.py` — lifespan, exception handlers (6 штук), пустой FastAPI
 - [x] Проверено: ruff ✅, format ✅, mypy ✅, `uvicorn` стартует и отвечает 200 на /docs
 
+#### ✅ Этап 2 — Контракты (завершён)
+- [x] SQLAlchemy модели: User, Ticket, FAQArticle, DocumentationArticle, TicketHistory, ErrorLog
+- [x] Pydantic схемы: auth, user, ticket, faq, common (ErrorResponse, PaginatedResponse)
+
+#### ✅ Этап 3 — API (завершён)
+- [x] `app/api/deps.py` — Annotated типы: DB, CurrentUser, Pagination
+- [x] `app/api/v1/auth.py` — POST /register, /token, /refresh
+- [x] `app/api/v1/users.py` — CRUD /users
+- [x] `app/api/v1/tickets.py` — CRUD /tickets + POST /submit
+
+#### ✅ Этап 4 — Services + Repositories (завершён)
+- [x] `app/repositories/base.py` — BaseRepository[T] (create, get, list, update, delete)
+- [x] `app/repositories/user_repository.py` — UserRepository (+ get_by_email)
+- [x] `app/repositories/ticket_repository.py` — TicketRepository (+ list_with_filters, find_similar_by_text)
+- [x] `app/repositories/faq_repository.py` — FAQRepository (+ search_by_keywords)
+- [x] `app/repositories/documentation_repository.py` — DocumentationRepository (+ search_by_product_area)
+- [x] `app/services/auth_service.py` — register, authenticate, refresh
+- [x] `app/services/user_service.py` — CRUD
+- [x] `app/services/ticket_service.py` — CRUD + submit + статусные переходы
+- [x] `app/services/agent_service.py` — process_ticket (оркестрация агента)
+- [x] Рутеры тонкие: `payload → service.call() → response`
+
+#### ✅ Этап 5 — Celery + Agent (завершён)
+- [x] `app/tasks/celery_app.py` — Celery app (redis broker/backend, autodiscover)
+- [x] `app/tasks/ticket_tasks.py` — `process_ticket(ticket_id)` (bridge async)
+- [x] `app/agent/prompts.py` — шаблоны промптов: классификация, маршрутизация, ответ
+- [x] `app/agent/matcher.py` — SemanticMatcher (поиск похожих тикетов/FAQ/docs)
+- [x] `app/agent/classifier.py` — TicketClassifier (faq_match/bug/feature_request/needs_info)
+- [x] `app/agent/router.py` — TicketRouter (категория + приоритет + команда)
+- [x] `app/agent/responder.py` — ResponseGenerator
+- [x] `app/agent/llm_provider.py` — LLMProvider (Ollama/OpenAI/stub)
+
 #### ✅ Этап 6 — Инфраструктура (завершён)
 - [x] `.env.example` — все переменные окружения
 - [x] Alembic: `alembic init`, async `env.py`, авто-миграция `init`, `upgrade head` (проверен downgrade/re-upgrade)
 - [x] `Dockerfile` — multi-stage (builder + runtime)
 - [x] `docker-compose.yml` — app + celery + postgres:16 + redis:7
-
-#### Этап 2 — Контракты (сначала данные)
-- [ ] Написать SQLAlchemy модели: User, Ticket, FAQArticle, DocumentationArticle, TicketHistory, ErrorLog
-- [ ] Написать Pydantic схемы: auth, user, ticket, faq, common (ErrorResponse, PaginatedResponse)
-
-#### Этап 3 — API (пишем рутеры первыми)
-- [ ] `app/api/deps.py` — Annotated типы: DB, CurrentUser, Pagination
-- [ ] `app/api/v1/auth.py` — POST /register, /token, /refresh
-- [ ] `app/api/v1/users.py` — CRUD /users (вся логика внутри рутеров)
-- [ ] `app/api/v1/tickets.py` — CRUD /tickets + POST /submit (вся логика внутри рутеров)
-
-#### Этап 4 — Вытягиваем Services (рефакторинг API)
-- [ ] `app/repositories/base.py` — BaseRepository[T]
-- [ ] `app/repositories/user_repository.py` — UserRepository
-- [ ] `app/repositories/ticket_repository.py` — TicketRepository
-- [ ] `app/repositories/faq_repository.py` — FAQRepository
-- [ ] `app/repositories/documentation_repository.py` — DocumentationRepository
-- [ ] Вынести логику из рутеров в сервисы:
-  - `app/services/auth_service.py` — register, authenticate, refresh
-  - `app/services/user_service.py` — CRUD
-  - `app/services/ticket_service.py` — CRUD + submit + статусные переходы
-  - `app/services/agent_service.py` — process_ticket (оркестрация агента)
-- [ ] Рутеры становятся тонкими: `payload → service.call() → response`
-
-#### Этап 5 — Celery + Agent
-- [ ] `app/tasks/celery_app.py` — Celery app (redis broker/backend)
-- [ ] `app/tasks/ticket_tasks.py` — `process_ticket(ticket_id)`
-- [ ] `app/agent/prompts.py` — шаблоны промптов для LLM
-- [ ] `app/agent/matcher.py` — SemanticMatcher (поиск похожих)
-- [ ] `app/agent/classifier.py` — TicketClassifier
-- [ ] `app/agent/router.py` — TicketRouter (категория + приоритет + команда)
-- [ ] `app/agent/responder.py` — ResponseGenerator
-
-#### Этап 6 — Инфраструктура
-- [ ] Alembic: `alembic init`, авто-генерация миграции, `upgrade head`
-- [ ] Dockerfile (multi-stage)
-- [ ] docker-compose.yml (app + postgres:16 + redis:7)
-- [ ] .env.example (все переменные)
 
 #### ✅ Этап 7 — Тесты (завершён)
 - [x] `tests/conftest.py` — async engine, savepoint rollback, client, auth fixtures, celery mock
