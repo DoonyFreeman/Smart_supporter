@@ -9,7 +9,7 @@ from app.utils.errors import ForbiddenException
 router = APIRouter(prefix="/users", tags=["users"])
 
 
-@router.get("/", response_model=list[UserResponse])
+@router.get("", response_model=list[UserResponse])
 async def list_users(
     db: DB,
     admin: AdminUser,

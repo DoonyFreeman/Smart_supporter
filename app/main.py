@@ -27,6 +27,7 @@ app = FastAPI(
     title="Automated Tech-Support Triager",
     version="0.1.0",
     lifespan=lifespan,
+    redirect_slashes=False,
 )
 
 app.include_router(auth.router, prefix=settings.API_V1_PREFIX)

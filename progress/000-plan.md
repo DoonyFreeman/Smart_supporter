@@ -79,8 +79,10 @@ supports_triager/
 - [ ] docker-compose.yml (app + postgres:16 + redis:7)
 - [ ] .env.example (все переменные)
 
-#### Этап 7 — Тесты
-- [ ] `tests/conftest.py` — async engine, test session, client, auth fixture
-- [ ] `tests/test_auth.py` — register, login, refresh, ошибки
-- [ ] `tests/test_tickets.py` — CRUD, submit, статусные переходы, фильтрация
-- [ ] `tests/test_agent.py` — mock LLM, тест matcher/classifier/router/responder
+#### ✅ Этап 7 — Тесты (завершён)
+- [x] `tests/conftest.py` — async engine, savepoint rollback, client, auth fixtures, celery mock
+- [x] `tests/test_auth.py` — 9 тестов: register (4), login (3), refresh (3)
+- [x] `tests/test_tickets.py` — 10 тестов: create (2), submit (2), list (3), get (2), update (2), delete (2)
+- [x] `tests/test_agent.py` — 14 тестов: matcher (2), classifier (4), router (3), responder (2), agent_service (2)
+- [x] Исправлены баги: `JWTError` не ловился в refresh, `redirect_slashes=False` для API, установлен `bcrypt==4.1.3`
+- [x] Проверено: ruff ✅, mypy ✅ (1 pre-existing celery stub), pytest ✅ 37/37

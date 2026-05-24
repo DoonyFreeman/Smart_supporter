@@ -3,6 +3,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.models import User
 from app.repositories import UserRepository
 from app.schemas.auth import TokenResponse
+from jose import JWTError
+
 from app.utils.errors import ConflictException, UnauthorizedException
 from app.utils.security import (
     create_access_token,
@@ -55,7 +57,7 @@ class AuthService:
             if sub is None:
                 raise UnauthorizedException("Invalid refresh token")
             user_id = int(sub)
-        except (ValueError, TypeError):
+        except (JWTError, ValueError, TypeError):
             raise UnauthorizedException("Invalid refresh token")
 
         user = await self.user_repo.get(user_id)

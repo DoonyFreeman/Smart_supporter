@@ -10,7 +10,7 @@ from app.utils.errors import ForbiddenException
 router = APIRouter(prefix="/tickets", tags=["tickets"])
 
 
-@router.post("/", response_model=TicketResponse, status_code=status.HTTP_201_CREATED)
+@router.post("", response_model=TicketResponse, status_code=status.HTTP_201_CREATED)
 async def create_ticket(
     db: DB,
     payload: TicketCreate,
@@ -28,6 +28,7 @@ async def create_ticket(
     "/submit", response_model=TicketResponse, status_code=status.HTTP_201_CREATED
 )
 async def submit_ticket(
+
     db: DB,
     payload: TicketCreate,
     current_user: CurrentUser,
@@ -42,7 +43,7 @@ async def submit_ticket(
     return ticket
 
 
-@router.get("/", response_model=list[TicketResponse])
+@router.get("", response_model=list[TicketResponse])
 async def list_tickets(
     db: DB,
     current_user: CurrentUser,

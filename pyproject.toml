@@ -1,7 +1,7 @@
 [project]
 name = "supports-triager"
 version = "0.1.0"
-description = "Add your description here"
+description = "Automated Tech-Support Triager — FastAPI + LLM"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
@@ -24,3 +24,14 @@ dependencies = [
     "ruff>=0.15.13",
     "sqlalchemy>=2.0.49",
 ]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
+
+[tool.mypy]
+files = ["app/", "tests/"]
+
+[[tool.mypy.overrides]]
+module = "tests.*"
+disable_error_code = "type-var"
