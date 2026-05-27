@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Query, status
 
 from app.api.deps import AdminUser, CurrentUser, DB, Pagination
-from app.models import Ticket
+from app.models import Ticket, TicketPriority, TicketStatus
 from app.schemas.ticket import TicketCreate, TicketResponse, TicketUpdate
 from app.services import TicketService
 from app.tasks import process_ticket
@@ -28,7 +28,6 @@ async def create_ticket(
     "/submit", response_model=TicketResponse, status_code=status.HTTP_201_CREATED
 )
 async def submit_ticket(
-
     db: DB,
     payload: TicketCreate,
     current_user: CurrentUser,
@@ -47,17 +46,19 @@ async def submit_ticket(
 async def list_tickets(
     db: DB,
     current_user: CurrentUser,
-    status: str | None = Query(None),
-    priority: str | None = Query(None),
-    category: str | None = Query(None),
-    assigned_team: str | None = Query(None),
+    status: TicketStatus | None = Query(None, description="Filter by ticket status"),
+    priority: TicketPriority | None = Query(
+        None, description="Filter by priority"
+    ),
+    category: str | None = Query(None, max_length=100),
+    assigned_team: str | None = Query(None, max_length=100),
     skip: int = Query(0, ge=0),
     limit: Pagination = 20,
 ) -> list[Ticket]:
     service = TicketService(db)
     return await service.list_tickets(
-        status=status,
-        priority=priority,
+        status=status.value if status else None,
+        priority=priority.value if priority else None,
         category=category,
         assigned_team=assigned_team,
         skip=skip,

@@ -1,8 +1,9 @@
-import json
-import re
+from app.agent.llm_provider import LLMProvider, detect_language, extract_json
+from app.agent.prompts import ROUTER_SYSTEM_EN, ROUTER_SYSTEM_RU, ROUTER_USER
 
-from app.agent.llm_provider import LLMProvider
-from app.agent.prompts import ROUTING_PROMPT
+VALID_CATEGORIES = {"Database", "API", "Reports", "Auth", "UI", "Network", "Other"}
+VALID_PRIORITIES = {"low", "medium", "high", "critical"}
+VALID_TEAMS = {"backend-db", "backend-api", "frontend", "infra"}
 
 
 class RouteResult:
@@ -22,20 +23,27 @@ class TicketRouter:
         self.llm = LLMProvider(stub=stub)
 
     async def route(self, title: str, description: str) -> RouteResult:
-        prompt = ROUTING_PROMPT.format(title=title, description=description)
-        result = await self.llm.generate(prompt)
+        lang = detect_language(f"{title}\n{description}")
+        system = ROUTER_SYSTEM_RU if lang == "ru" else ROUTER_SYSTEM_EN
+        user = ROUTER_USER.format(title=title, description=description)
+        prompt = f"{system}\n\n{user}"
 
-        try:
-            data = json.loads(result)
-        except json.JSONDecodeError:
-            match = re.search(r"\{.*\}", result, re.DOTALL)
-            if match:
-                data = json.loads(match.group())
-            else:
-                return RouteResult()
+        raw = await self.llm.generate(prompt)
+        data = extract_json(raw or "")
+        if not data:
+            return RouteResult()
+
+        category = str(data.get("category") or "Other")
+        priority = str(data.get("priority") or "medium").lower()
+        team = str(data.get("assigned_team") or "backend-api").lower()
+
+        if category not in VALID_CATEGORIES:
+            category = "Other"
+        if priority not in VALID_PRIORITIES:
+            priority = "medium"
+        if team not in VALID_TEAMS:
+            team = "backend-api"
 
         return RouteResult(
-            category=data.get("category", "Other"),
-            priority=data.get("priority", "medium"),
-            assigned_team=data.get("assigned_team", "backend-api"),
+            category=category, priority=priority, assigned_team=team
         )

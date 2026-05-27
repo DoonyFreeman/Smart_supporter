@@ -18,6 +18,7 @@ export interface Ticket {
   assigned_to: number | null;
   created_by: number;
   response_text: string | null;
+  resolved_at: string | null;
   created_at: string;
   updated_at: string;
 }

@@ -1,7 +1,10 @@
 import asyncio
+import os
+import re
 from collections.abc import AsyncGenerator, Generator
 from typing import Any
 
+import asyncpg
 import pytest
 import pytest_asyncio
 from httpx import ASGITransport, AsyncClient
@@ -10,8 +13,6 @@ from sqlalchemy.ext.asyncio import (
     AsyncSession,
     create_async_engine,
 )
-
-import os
 
 from app.config import settings as _settings
 from app.database import get_db
@@ -25,7 +26,39 @@ if not _INSIDE_DOCKER:
     _settings.DATABASE_URL = _settings.DATABASE_URL.replace("@postgres:", "@localhost:")
 _settings.LLM_STUB = True
 _settings.LLM_API_URL = "http://localhost:11434/api/generate"
-_TEST_DB_URL = _settings.DATABASE_URL
+
+# CRITICAL: tests run destructive schema operations (drop_all). They MUST NOT
+# touch the production database. Redirect to a dedicated test database — its
+# name is the production db name + "_test" — and create it if missing.
+_PROD_URL = _settings.DATABASE_URL
+_TEST_DB_NAME = re.sub(r"/([^/?]+)(\?|$)", r"/\1_test\2", _PROD_URL).rsplit("/", 1)[-1]
+_TEST_DB_URL = re.sub(r"/[^/?]+(\?|$)", f"/{_TEST_DB_NAME}\\1", _PROD_URL)
+# Also point app.config at the test DB so endpoints hit by the TestClient
+# read/write to the same isolated database.
+_settings.DATABASE_URL = _TEST_DB_URL
+
+
+def _ensure_test_database_exists() -> None:
+    """Create the test database if it doesn't exist (uses asyncpg directly)."""
+    # Strip SQLAlchemy driver prefix, swap db name to "postgres" to issue CREATE DATABASE.
+    raw = _PROD_URL.replace("postgresql+asyncpg://", "postgresql://")
+    admin_url = re.sub(r"/[^/?]+(\?|$)", "/postgres\\1", raw)
+
+    async def _do() -> None:
+        conn = await asyncpg.connect(admin_url)
+        try:
+            exists = await conn.fetchval(
+                "SELECT 1 FROM pg_database WHERE datname = $1", _TEST_DB_NAME
+            )
+            if not exists:
+                await conn.execute(f'CREATE DATABASE "{_TEST_DB_NAME}"')
+        finally:
+            await conn.close()
+
+    asyncio.run(_do())
+
+
+_ensure_test_database_exists()
 
 
 @pytest.fixture(scope="session")
